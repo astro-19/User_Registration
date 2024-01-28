@@ -1,8 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import { TextField, Button, Box } from "@mui/material";
+import { TextField, Button, Box, Autocomplete } from "@mui/material";
+import { setPersonalDetails } from "../Store/Reducer/personalDetail";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+const apiUrl = "https://restcountries.com/v3.1/name/";
 
 const schema = Yup.object().shape({
   address: Yup.string().optional(),
@@ -12,13 +17,51 @@ const schema = Yup.object().shape({
   pincode: Yup.string().matches(/^\d+$/, "Invalid pincode"),
 });
 
-const AddressDetailsForm = ({ onSubmit }) => {
+const AddressDetailsForm = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const formData = useSelector(setPersonalDetails);
+
   const { control, handleSubmit } = useForm({
     resolver: yupResolver(schema),
   });
 
   const handleFormSubmit = (data) => {
-    onSubmit(data);
+    dispatch(setPersonalDetails(data));
+    window.localStorage.setItem(
+      "ReduxState_",
+      JSON.stringify([formData.payload.personalDetails])
+    );
+    navigate(-1);
+  };
+
+  const [query, setQuery] = useState("");
+  const [countryOptions, setCountryOptions] = useState([]);
+
+  useEffect(() => {
+    const getCountryOptions = async () => {
+      try {
+        const response = await fetch(apiUrl + query);
+        const countries = await response.json();
+        setCountryOptions(countries);
+      } catch (error) {
+        alert("Error fetching country data:", error);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      if (query.trim() !== "") {
+        getCountryOptions();
+      } else {
+        setCountryOptions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
+
+  const handleInputChange = (event) => {
+    setQuery(event.target.value);
   };
 
   return (
@@ -42,7 +85,6 @@ const AddressDetailsForm = ({ onSubmit }) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        onSubmit={handleSubmit(handleFormSubmit)}
       >
         <div>
           <Controller
@@ -63,13 +105,15 @@ const AddressDetailsForm = ({ onSubmit }) => {
             name="state"
             control={control}
             render={({ field, fieldState }) => (
-              <TextField
-                label="State"
-                variant="outlined"
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-              />
+              <>
+                <TextField
+                  label="State"
+                  variant="outlined"
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              </>
             )}
           />
 
@@ -80,20 +124,6 @@ const AddressDetailsForm = ({ onSubmit }) => {
               <TextField
                 label="City"
                 type="tel"
-                variant="outlined"
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-              />
-            )}
-          />
-
-          <Controller
-            name="country"
-            control={control}
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Country"
                 variant="outlined"
                 {...field}
                 error={!!fieldState.error}
@@ -115,9 +145,29 @@ const AddressDetailsForm = ({ onSubmit }) => {
               />
             )}
           />
+
+          <Autocomplete
+            options={countryOptions}
+            name="country"
+            control={control}
+            getOptionLabel={(option) => option?.name?.common || "Unknown"}
+            onInputChange={handleInputChange}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Type a country"
+                variant="outlined"
+              />
+            )}
+          />
         </div>
         <div>
-          <Button type="submit" variant="contained" color="primary">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit(handleFormSubmit)}
+          >
             Save
           </Button>
         </div>

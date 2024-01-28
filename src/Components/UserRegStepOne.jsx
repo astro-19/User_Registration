@@ -11,6 +11,9 @@ import {
   InputLabel,
 } from "@mui/material";
 import Box from "@mui/material/Box";
+import { setPersonalDetails } from "../Store/Reducer/personalDetail";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const schema = Yup.object().shape({
   name: Yup.string()
@@ -22,26 +25,36 @@ const schema = Yup.object().shape({
   sex: Yup.string()
     .required("Sex is required")
     .oneOf(["Male", "Female"], "Invalid sex"),
-  mobile: Yup.string().matches(/^[6-9]\d{9}$/, "Invalid mobile number"),
-  govtIdType: Yup.string().oneOf(["Aadhar", "PAN"], "Invalid ID type"),
+  mobile: Yup.string()
+    .required("Mobile is required")
+    .matches(/^[6-9]\d{9}$/, "Invalid mobile number"),
+  govtIdType: Yup.string()
+    .required("Govt. Id type is required")
+    .oneOf(["Aadhar", "PAN"], "Invalid ID type"),
   govtId: Yup.string()
+    .required("Govt. Id number is required")
     .when("govtIdType", {
       is: "Aadhar",
       then: Yup.string().matches(/^[2-9]\d{11}$/, "Invalid Aadhar number"),
     })
+    .required("Govt. Id number is required")
     .when("govtIdType", {
       is: "PAN",
       then: Yup.string().matches(/^[A-Za-z0-9]{10}$/, "Invalid PAN number"),
     }),
 });
 
-const PersonalDetailsForm = ({ onNext }) => {
+const PersonalDetailsForm = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const { control, handleSubmit } = useForm({
     resolver: yupResolver(schema),
   });
 
   const onSubmit = (data) => {
-    onNext(data);
+    dispatch(setPersonalDetails(data));
+    navigate("/user-registration-step-two");
   };
 
   return (
@@ -65,7 +78,6 @@ const PersonalDetailsForm = ({ onNext }) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        onSubmit={handleSubmit(onSubmit)}
       >
         <div>
           <Controller
@@ -106,12 +118,18 @@ const PersonalDetailsForm = ({ onNext }) => {
                   {...field}
                   label="Sex"
                   error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
                   sx={{ width: "25ch", marginTop: "1ch" }}
                 >
                   <MenuItem value={"Male"}>Male</MenuItem>
                   <MenuItem value={"Female"}>Female</MenuItem>
                 </Select>
+                {fieldState.error?.message ? (
+                  <p className="error HelperText-root">
+                    {fieldState.error?.message}
+                  </p>
+                ) : (
+                  ""
+                )}
               </FormControl>
             )}
           />
@@ -147,6 +165,13 @@ const PersonalDetailsForm = ({ onNext }) => {
                   <MenuItem value={"Aadhar"}>Aadhar</MenuItem>
                   <MenuItem value={"PAN"}>PAN</MenuItem>
                 </Select>
+                {fieldState.error?.message ? (
+                  <p className="error HelperText-root">
+                    {fieldState.error?.message}
+                  </p>
+                ) : (
+                  ""
+                )}
               </FormControl>
             )}
           />
@@ -166,7 +191,12 @@ const PersonalDetailsForm = ({ onNext }) => {
           />
         </div>
         <div>
-          <Button type="submit" variant="contained" color="primary">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit(onSubmit)}
+          >
             Next
           </Button>
         </div>
