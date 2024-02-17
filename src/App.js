@@ -3,14 +3,10 @@ import UserRegStepTwo from "./Components/UserRegStepTwo";
 import { Routes, Route } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import "./App.css";
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { setPersonalDetails } from "./Store/Reducer/personalDetail";
 
-// import { Button } from "@mui/material";
-
 function App() {
-  // const navigate = useNavigate();
   const formData = useSelector(setPersonalDetails);
 
   const columns = [
