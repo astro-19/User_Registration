@@ -31,7 +31,6 @@ function App() {
     { name: "Pincode", selector: (row) => row.pincode, sortable: true },
   ];
 
-  // const [dataTable, setDatatableData] = useState();
   let dataTable;
   dataTable = JSON.parse(window.localStorage.getItem("ReduxState_"));
   window.localStorage.setItem(
@@ -57,15 +56,6 @@ function App() {
         }}
       >
         <h1>Users List</h1>
-        {/* <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          style={{ height: "3rem" }}
-          onClick={() => navigate("/user-registration-step-one")}
-        >
-          Register
-        </Button> */}
       </div>
       <DataTable columns={columns} data={dataTable} />
     </div>
